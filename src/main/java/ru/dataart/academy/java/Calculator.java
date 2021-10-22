@@ -1,9 +1,6 @@
 package ru.dataart.academy.java;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
@@ -85,7 +82,28 @@ public class Calculator {
             dir.mkdir();
         }
 
-        try (ZipFile zf = new ZipFile(zipFilePath, StandardCharsets.UTF_8)) {
+        try (ZipInputStream zin = new ZipInputStream(new FileInputStream(zipFilePath))) {
+            ZipEntry zipEntry = null;
+            while((zipEntry=zin.getNextEntry())!=null) {
+                String pathName = UNPACKED_ZIPS_DIR + zipEntry.getName();
+                FileOutputStream fout = new FileOutputStream(pathName);
+                for (int c = zin.read(); c != -1; c = zin.read()) {
+                    fout.write(c);
+                }
+                
+                fout.flush();
+                zin.closeEntry();
+                fout.close();
+                File file = new File(pathName);
+                if (Files.exists(file.toPath())) {
+                    filesFromZip.add(file);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*try (ZipFile zf = new ZipFile(zipFilePath, StandardCharsets.UTF_8)) {
             Enumeration<? extends ZipEntry> zipEntries = zf.entries();
             while (zipEntries.hasMoreElements()) {
                 ZipEntry zipEntry = zipEntries.nextElement();
@@ -99,7 +117,7 @@ public class Calculator {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
         return filesFromZip;
     }
